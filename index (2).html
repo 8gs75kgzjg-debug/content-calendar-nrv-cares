@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NRV CARES Content Calendar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: themed full-bleed month background → frosted header & controls → month hero → glass calendar grid with photo posts + side panel → post dialog with platform previews */
+:root{
+  --ink:#1D2A39; --muted:#5A6878; --glass:rgba(255,255,255,.86); --glass2:rgba(255,255,255,.62); --line:rgba(20,40,70,.12);
+  --navy:#0E3A66; --gold:#E3A33B;
+  --c-casa:#3E6D9C; --c-parent:#4F9A6A; --c-prev:#2A8C8C; --c-event:#E07B39; --c-donor:#D9A21B; --c-aware:#C9506B;
+  --display:"Bricolage Grotesque","Montserrat",Arial,sans-serif; --body:"Montserrat",Arial,sans-serif;
+  --theme-a:#0E3A66; --theme-b:#3E6D9C; --theme-ink:#fff; --theme-accent:#E3A33B;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--body);color:var(--ink);font-size:14px;line-height:1.45;min-height:100vh;background:var(--theme-a);transition:background .5s}
+.bg{position:fixed;inset:0;z-index:-1;background:linear-gradient(160deg,var(--theme-a),var(--theme-b));transition:background .5s}
+.bg::after{content:"";position:absolute;inset:0;background-image:var(--pattern);background-size:var(--psize,220px);opacity:var(--pop,.5)}
+body[data-m="2026-12"]{--theme-a:#123B2E;--theme-b:#7A1F2B;--theme-accent:#F2C14E;--pattern:var(--snow);--psize:240px;--pop:.55}
+body[data-m="2027-01"]{--theme-a:#0B1530;--theme-b:#24305E;--theme-accent:#F4C95D;--pattern:var(--confetti);--psize:260px;--pop:.7}
+body[data-m="2027-02"]{--theme-a:#F7C6D3;--theme-b:#E77A98;--theme-ink:#5A1630;--theme-accent:#B2214B;--pattern:var(--hearts);--psize:200px;--pop:.55}
+body[data-m="2027-03"]{--theme-a:#D9F0E4;--theme-b:#E8DDF7;--theme-ink:#2D3B2F;--theme-accent:#7C5CC4;--pattern:var(--eggs);--psize:230px;--pop:.7}
+body[data-m="2027-04"]{--theme-a:#BFE0F7;--theme-b:#5C9BD1;--theme-ink:#0E2E52;--theme-accent:#1F5FA8;--pattern:var(--pinwheels);--psize:240px;--pop:.6}
+body[data-m="gallery"]{--theme-a:#0E3A66;--theme-b:#3E6D9C;--pattern:var(--dots);--psize:28px;--pop:.25}
+.wrap{max-width:1280px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-left,0px)) 0 max(16px,env(safe-area-inset-right,0px))}
+header.top{padding:18px 0 6px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;color:var(--theme-ink)}
+.brand{display:flex;align-items:center;gap:12px;margin-right:auto}
+.brand svg{width:46px;height:46px;flex:none;filter:drop-shadow(0 3px 8px rgba(0,0,0,.25))}
+.brand h1{font:800 24px/1.1 var(--display);margin:0;letter-spacing:-.01em}
+.brand p{margin:2px 0 0;font-size:12.5px;opacity:.85}
+.mock{font-size:11.5px;font-weight:700;background:var(--glass);color:var(--navy);border-radius:999px;padding:5px 12px}
+.controls{background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:18px;padding:10px 12px;margin-top:10px;box-shadow:0 10px 30px rgba(0,0,0,.12)}
+.row{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.row+.row{margin-top:8px}
+.lbl{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:5px 11px;font:600 12px var(--body);cursor:pointer;transition:transform .12s}
+.chip:hover{transform:translateY(-1px)}
+.chip i{width:10px;height:10px;border-radius:50%}
+.chip svg{width:14px;height:14px}
+.chip[aria-pressed="false"]{opacity:.4}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:14px 0 4px}
+.tab{border:0;cursor:pointer;border-radius:999px;padding:9px 16px;font:800 14px var(--display);background:var(--glass2);color:var(--navy);white-space:nowrap;backdrop-filter:blur(8px)}
+.tab[aria-selected="true"]{background:#fff;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.tab span{font:600 11px var(--body);opacity:.7;margin-left:4px}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.hero{color:var(--theme-ink);display:flex;flex-wrap:wrap;align-items:flex-end;gap:6px 24px;padding:18px 0 12px}
+.hero h2{font:800 clamp(40px,7vw,78px)/.95 var(--display);margin:0;letter-spacing:-.03em;text-shadow:0 4px 22px rgba(0,0,0,.18)}
+.hero .sub{max-width:520px}
+.hero .kick{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;background:var(--theme-accent);color:#fff;border-radius:999px;padding:4px 10px;margin-bottom:6px}
+.hero p{margin:0;font-size:14px;opacity:.92}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:18px;padding-bottom:40px}
+.panel{background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:20px;box-shadow:0 14px 40px rgba(0,0,0,.18)}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;padding:10px}
+.dow{font:700 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:2px 6px}
+.day{background:rgba(255,255,255,.75);border-radius:12px;min-height:132px;padding:6px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.day.out{background:transparent}
+.day .n{display:flex;justify-content:space-between;align-items:center;gap:4px;font:800 13px var(--display);color:var(--navy)}
+.day .n em{font:700 9px var(--body);font-style:normal;color:#fff;background:var(--theme-accent);border-radius:999px;padding:2px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:78%}
+.post{all:unset;cursor:pointer;display:block;border-radius:10px;overflow:hidden;position:relative;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.12);transition:transform .15s,box-shadow .15s}
+.post:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,.2)}
+.post:focus-visible{outline:3px solid var(--gold)}
+.post img{display:block;width:100%;height:58px;object-fit:cover}
+.post .cap{display:block;padding:4px 6px 5px;font-size:10.5px;font-weight:600;line-height:1.2;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-height:calc(2.4em + 9px)}
+.post .stripe{position:absolute;left:6px;top:6px;width:10px;height:10px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.post .plats{position:absolute;right:4px;top:4px;display:flex;gap:2px}
+.pico{width:16px;height:16px;border-radius:5px;display:grid;place-items:center}
+.pico svg{width:10px;height:10px}
+.p-ig{background:linear-gradient(45deg,#F58529,#DD2A7B,#8134AF)}.p-fb{background:#1877F2}.p-li{background:#0A66C2}
+.post .fmt{position:absolute;left:6px;top:36px;font:700 8.5px var(--body);background:rgba(0,0,0,.55);color:#fff;border-radius:99px;padding:1px 6px}
+.side .card{padding:16px;margin-bottom:14px}
+.side h3{font:800 16px var(--display);color:var(--navy);margin:0 0 8px}
+.mix{display:flex;height:12px;border-radius:6px;overflow:hidden;margin:4px 0 10px}
+.ml{list-style:none;margin:0;padding:0;display:grid;gap:5px;font-size:12px}
+.ml li{display:flex;align-items:center;gap:7px}.ml b{margin-left:auto;font-variant-numeric:tabular-nums}
+.ml i{width:9px;height:9px;border-radius:50%}
+.pl{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.pl div{background:#fff;border-radius:12px;padding:8px 4px}
+.pl b{display:block;font:800 22px var(--display);color:var(--navy)}
+.pl span{font-size:11px;color:var(--muted)}
+.keys{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-size:12.5px}
+.keys li{display:grid;grid-template-columns:62px 1fr;gap:8px}
+.keys time{font:800 12.5px var(--display);color:var(--theme-accent)}
+.times{font-size:12.5px;display:grid;gap:5px}
+.times div{display:flex;gap:8px;align-items:center}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;padding:12px}
+.gcard{all:unset;cursor:pointer;display:block;border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.14);transition:transform .15s}
+.gcard:hover{transform:translateY(-3px)}
+.gcard .meta{padding:8px 10px;font-size:11.5px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.gcard .meta b{color:var(--ink)}
+/* post graphic: real photo + brand overlay */
+.graphic{position:relative;aspect-ratio:1/1;overflow:hidden;container-type:inline-size;background:#ddd}
+.graphic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.graphic .ov{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 35%,var(--cc) 100%)}
+.graphic .wm{position:absolute;left:6%;top:5%;font:800 5.2cqi var(--display);color:#fff;background:rgba(14,58,102,.78);border-radius:99px;padding:1.4cqi 3.4cqi;letter-spacing:.02em}
+.graphic .hl{position:absolute;left:6%;right:6%;bottom:12%;font:800 8.6cqi/1.04 var(--display);color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.35);letter-spacing:-.01em}
+.graphic .tg{position:absolute;left:6%;bottom:5%;font:700 4.2cqi var(--body);color:#fff;opacity:.95;text-transform:uppercase;letter-spacing:.08em}
+.graphic.wide{aspect-ratio:1.91/1}
+.graphic.wide .hl{font-size:5.6cqi;right:30%}
+.graphic.wide .wm{font-size:3.2cqi}.graphic.wide .tg{font-size:2.6cqi}
+/* dialog */
+dialog{border:0;border-radius:22px;padding:0;width:min(860px,calc(100% - 24px));max-height:calc(100% - 24px);background:#fff;color:var(--ink);box-shadow:0 30px 80px rgba(0,0,0,.4)}
+dialog::backdrop{background:rgba(8,16,30,.6);backdrop-filter:blur(3px)}
+.dg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;padding:22px}
+.x{position:absolute;right:12px;top:12px;width:34px;height:34px;border-radius:50%;border:0;background:#EEF2F7;cursor:pointer;font-size:18px;z-index:2}
+.tag{display:inline-flex;align-items:center;gap:6px;font:700 11px var(--body);letter-spacing:.06em;text-transform:uppercase}
+.tag i{width:9px;height:9px;border-radius:50%}
+.dg h3{font:800 24px/1.1 var(--display);margin:6px 0 12px;color:var(--navy)}
+dl{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;margin:0 0 12px;font-size:13px}dt{color:var(--muted);font-weight:600}dd{margin:0}
+.ptabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 40px 10px 0}
+.ptab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font:700 12px var(--body);cursor:pointer;display:flex;gap:6px;align-items:center}
+.ptab[aria-selected="true"]{background:var(--navy);color:#fff;border-color:var(--navy)}
+.mockup{border:1px solid #E3E7EC;border-radius:14px;overflow:hidden;background:#fff;font-size:12.5px}
+.mh{display:flex;align-items:center;gap:8px;padding:9px 11px}
+.av{width:30px;height:30px;border-radius:50%;background:#E3A33B;display:grid;place-items:center;font:800 9px var(--display);color:#0E3A66;flex:none}
+.mh b{font-size:12.5px}.mh small{display:block;color:#65676B;font-size:11px}
+.mt{padding:0 11px 9px;white-space:pre-wrap}
+.mt.li{padding-top:2px}
+.mf{display:flex;gap:14px;padding:8px 11px;color:#65676B;font-size:11.5px;border-top:1px solid #EEF0F2}
+.ig-actions{display:flex;gap:12px;padding:8px 11px 2px;font-size:16px}
+.copy{margin-top:10px;background:var(--navy);color:#fff;border:0;border-radius:10px;padding:8px 14px;font:700 12px var(--body);cursor:pointer}
+.foot{color:var(--theme-ink);opacity:.85;font-size:11.5px;padding:0 0 30px}
+.agenda{display:none}
+@media (max-width:980px){.layout{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:700px){.cal{display:none}.agenda{display:grid;gap:10px;padding:10px}.dg{grid-template-columns:minmax(0,1fr)}
+  .ar{display:grid;grid-template-columns:54px minmax(0,1fr);gap:10px}.ar time{font:800 14px var(--display);color:var(--navy)}.ar .ps{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media print{.controls,.tabs{display:none}}
+</style>
+</head>
+<body data-m="2026-12">
+<div class="bg" id="bg"></div>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="22" fill="#fff"/><g fill="#E3A33B"><path d="M22 7l3 7h-6z"/><path d="M7 22l7-3v6z"/><path d="M37 22l-7 3v-6z"/><path d="M11.5 11.5l6.5 4-2.5 2.5z"/><path d="M32.5 11.5l-4 6.5-2.5-2.5z"/></g><path d="M22 35s-9-5.5-9-11a4.6 4.6 0 0 1 9-2 4.6 4.6 0 0 1 9 2c0 5.5-9 11-9 11z" fill="#C9506B"/></svg>
+      <div><h1>NRV CARES Content Calendar</h1><p>December 2026 – April 2027 · Instagram · Facebook · LinkedIn</p></div>
+    </div>
+    <span class="mock">Mock calendar · example posts</span>
+  </header>
+  <div class="controls">
+    <div class="row" id="cats"></div>
+    <div class="row" id="plats"></div>
+  </div>
+  <nav class="tabs" id="tabs" role="tablist"></nav>
+  <section class="hero" id="hero"></section>
+  <div class="layout">
+    <section class="panel" id="view"></section>
+    <aside class="side" id="side"></aside>
+  </div>
+  <p class="foot">Photos: Unsplash (free license), shown as examples. Replace with NRV CARES' own photos before posting, and never show children or families served by CASA or NRV CARES programs. Bracketed items like [date] are filled in by staff.</p>
+</div>
+<dialog id="dlg"><button class="x" id="x" aria-label="Close">×</button><div class="dg" id="dg"></div></dialog>
+
+<script>
+/* ---------- themed background patterns (inline SVG) ---------- */
+const svg=s=>`url("data:image/svg+xml,${encodeURIComponent(s)}")`;
+const R=document.documentElement.style;
+R.setProperty('--snow',svg(`<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><g fill='none' stroke='#fff' stroke-width='2' stroke-linecap='round'>${[[40,40,10],[170,70,14],[100,150,8],[210,200,10],[30,190,12],[140,220,6]].map(([x,y,r])=>`<g transform='translate(${x} ${y})'><path d='M0 -${r}V${r}M-${r*.87} -${r/2}L${r*.87} ${r/2}M-${r*.87} ${r/2}L${r*.87} -${r/2}'/></g>`).join('')}</g><g fill='#fff'><circle cx='80' cy='90' r='2.5'/><circle cx='200' cy='130' r='2'/><circle cx='120' cy='30' r='2'/><circle cx='60' cy='230' r='2.5'/></g></svg>`));
+R.setProperty('--confetti',svg(`<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><g>${[[30,40,'#F4C95D',20],[120,20,'#fff',-30],[200,60,'#F28FAD',45],[60,140,'#8FD3F4',10],[170,150,'#F4C95D',-60],[230,220,'#fff',30],[100,220,'#F4C95D',70]].map(([x,y,c,r])=>`<rect x='${x}' y='${y}' width='14' height='5' rx='2' fill='${c}' transform='rotate(${r} ${x} ${y})'/>`).join('')}</g><g fill='#F4C95D'><path d='M150 100l3 7 7 3-7 3-3 7-3-7-7-3 7-3z'/><path d='M40 90l2 5 5 2-5 2-2 5-2-5-5-2 5-2z'/><path d='M220 120l2 5 5 2-5 2-2 5-2-5-5-2 5-2z'/></g><g fill='#fff' opacity='.8'><circle cx='90' cy='70' r='1.6'/><circle cx='190' cy='200' r='1.6'/><circle cx='20' cy='200' r='1.6'/></g></svg>`));
+R.setProperty('--hearts',svg(`<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'>${[[40,40,1,'#fff'],[140,70,.7,'#C2185B'],[90,150,1.2,'#fff'],[175,170,.6,'#fff'],[20,140,.6,'#C2185B']].map(([x,y,s,c])=>`<path transform='translate(${x} ${y}) scale(${s})' d='M0 18S-18 7-18-4a9 9 0 0 1 18-3 9 9 0 0 1 18 3C18 7 0 18 0 18z' fill='${c}' opacity='.75'/>`).join('')}</svg>`));
+R.setProperty('--eggs',svg(`<svg xmlns='http://www.w3.org/2000/svg' width='230' height='230'>${[[45,50,'#F7B7C8','#fff'],[160,40,'#B9E4C9','#7FB89A'],[110,140,'#CDB8F2','#fff'],[200,170,'#FFE29A','#F2B84B'],[40,190,'#AEDCF2','#fff']].map(([x,y,c,s])=>`<g transform='translate(${x} ${y}) rotate(-12)'><ellipse rx='17' ry='22' fill='${c}'/><path d='M-16 -2q8 6 16 0t16 0' stroke='${s}' stroke-width='3' fill='none'/><path d='M-14 8q7 5 14 0t14 0' stroke='${s}' stroke-width='2' fill='none'/></g>`).join('')}<g transform='translate(105 60)'><path d='M0 30V8' stroke='#5E9C6F' stroke-width='3'/><path d='M-8 -6q8 -10 16 0q2 12 -8 14q-10 -2 -8 -14z' fill='#F28FAD'/></g></svg>`));
+R.setProperty('--pinwheels',svg(`<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'>${[[60,60,1],[180,110,.8],[80,190,.7],[210,220,.5]].map(([x,y,s])=>`<g transform='translate(${x} ${y}) scale(${s})'><path d='M0 0V-26a13 13 0 0 1 0 26z' fill='#1F5FA8'/><path d='M0 0H26a13 13 0 0 1-26 0z' fill='#fff'/><path d='M0 0V26a13 13 0 0 1 0-26z' fill='#1F5FA8'/><path d='M0 0H-26a13 13 0 0 1 26 0z' fill='#fff'/><circle r='3' fill='#E3A33B'/><path d='M0 4V44' stroke='#fff' stroke-width='3'/></g>`).join('')}<g fill='#fff' opacity='.7'><ellipse cx='150' cy='30' rx='26' ry='9'/><ellipse cx='20' cy='120' rx='18' ry='7'/></g></svg>`));
+R.setProperty('--dots',svg(`<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28'><circle cx='14' cy='14' r='1.6' fill='#fff'/></svg>`));
+
+/* ---------- data ---------- */
+const CATS={
+  casa:{name:'CASA Volunteer Recruitment',color:'#3E6D9C',cta:'Become a CASA',tags:'#NRVCARES #CASAvolunteer #BeACASA #NewRiverValley #VolunteerNRV'},
+  parent:{name:'Parent Education & Classes',color:'#4F9A6A',cta:'Register for a class',tags:'#NRVCARES #ParentingSupport #StrongFamilies #CircleOfParents #ChristiansburgVA'},
+  prev:{name:'Prevention & Community Education',color:'#2A8C8C',cta:'Book a training',tags:'#NRVCARES #PreventChildAbuse #StewardsOfChildren #KnowTheSigns #NewRiverValley'},
+  event:{name:'Events & Community Highlights',color:'#E07B39',cta:'Join us',tags:'#NRVCARES #NRVCARESAuction #NewRiverValley #BlacksburgVA #NRVevents'},
+  donor:{name:'Donor & Sponsor Thanks',color:'#D9A21B',cta:'Donate / Sponsor',tags:'#NRVCARES #ThankYouSponsors #GiveLocalNRV #NonprofitVA #CommunityImpact'},
+  aware:{name:'Awareness Days & Holidays',color:'#C9506B',cta:'Take one action',tags:'#NRVCARES #StrongFamilies #NewRiverValley #ChildAbusePreventionMonth'}
+};
+const INTERN_TAGS='#Internship #NonprofitCareers #VirginiaTech #HokieInternships #NRVCARES #NewRiverValley';
+const PH=['1639178952543-1c0ea3cbacaa','1577721174006-98a67a796931','1544546491-1ecfecfcc75a','1571210917553-8509b1db9322','1549465220-1a8b9238cd48','1764936510327-9c8c72f735e5','1545622783-b3e021430fee','1605941407951-fa62495beb54','1577046848358-4623c0859b8a','1713942590283-59867d5e3f8d','1536825919521-ab78da56193b','1594434804563-ecbee683fd49','1758270705290-62b6294dd044','1515378960530-7c0da6231fb1','1517048676732-d65bc937f952','1573164574572-cb89e39749b4','1542037104857-ffbb0b9155fb','1784552096572-8bf0bce457f4','1621836250063-ba0599d5b110','1763896877724-b73d1ef2dc69','1768508948835-7dbab7ca6d58','1672380135241-c024f7fbfa13','1636652966850-5ac4d02370e9','1593115057322-e94b77572f20','1586738730873-bdd59a596a2d','1711483667297-72f65fd35cb4','1456415333674-42b11b9f5b7b','1586968295564-92fd7572718b','1716070251589-711efc5e077e','1549032305-e816fabf0dd2','1530466273513-3626af215477','1620703516536-c155c5f62f28','1761662827034-13225b496e66','1529672425113-d3035c7f4837','1695027644747-be40a6349ef2','1560220604-1985ebfe28b1','1504151932400-72d4384f04b3','1532789339108-2ebc484efbf1','1618521715147-29e4b97e2ebd'];
+const img=(i,w,h)=>`https://images.unsplash.com/photo-${PH[i]}?w=${w}&h=${h}&fit=crop&q=72&auto=format`;
+// [date, category, platforms, format, photo, headline, caption, intern?]
+const RAW=[
+['2026-12-01','donor','ig fb li','Carousel',4,'Giving Tuesday: help NRV families thrive','Today is #GivingTuesday! Your gift helps NRV CARES offer FREE parenting classes and CASA advocacy for 100+ children in the New River Valley. Swipe to see where your gift goes, then give through the link in our bio. 💙'],
+['2026-12-02','event','li','Image',13,'We\'re hiring: Spring 2027 Social Media & Marketing Intern','NRV CARES is hiring a Spring 2027 Social Media & Marketing Intern! 📣\n\nHelp a 40+ year-old New River Valley nonprofit reach more families through Instagram, Facebook and LinkedIn.\n✔️ 5–8 hrs/week, hybrid in Christiansburg\n✔️ Create posts, Reels and graphics in Canva\n✔️ Track analytics and build real portfolio work\n\nApply on Handshake by [date]. Know a great fit? Tag them below 👇',1],
+['2026-12-03','parent','ig fb','Carousel',1,'Holiday stress? 3 calm-down tips for parents','The holidays can be a lot. Swipe for 3 quick ways to stay calm when everyone is overwhelmed. Need more support? Our Circle of Parents® group meets every week, free.'],
+['2026-12-08','casa','ig fb','Reel',6,'What does a CASA volunteer do?','No law degree needed. CASA volunteers get to know one child, speak up for them in court, and stay until they have a safe home. Watch to see what the role looks like. 🎥'],
+['2026-12-09','donor','li fb','Image',21,'Thank you, Tidal Wave Auto Spa','Thank you to Tidal Wave Auto Spa and the Kappa Delta chapter at Virginia Tech. Your Charity Day raised $1,322.79 for children and families in the NRV. Local businesses make this work possible.'],
+['2026-12-10','prev','ig fb','Carousel',0,'Safe holidays: 3 ways adults keep kids safe','Family gatherings are busy. Swipe for 3 simple ways the adults in the room can keep kids safe and comfortable this season.'],
+['2026-12-15','donor','ig fb li','Carousel',5,'A year of community impact','2026 by the numbers: [# children served], [# parents in classes], [# trainings]. None of it happens without you. Thank you for a strong year! ✨'],
+['2026-12-16','parent','ig fb','Image',2,'Circle of Parents meets through the holidays','You don\'t have to do this alone. Circle of Parents® keeps meeting through the holidays, in person and on Zoom. Free and open to all caregivers.'],
+['2026-12-22','aware','ig fb li','Image',3,'Wishing you a safe and happy holiday season','From all of us at NRV CARES: wishing our New River Valley community a safe, warm and happy holiday season. ❄️'],
+['2026-12-29','casa','ig fb','Image',11,'One meaningful commitment for 2027','Looking for a New Year\'s resolution that matters? Become a CASA volunteer and be the steady adult a child needs. Learn more at the link in bio.'],
+['2026-12-31','aware','ig fb','Image',7,'Happy New Year from NRV CARES','Here\'s to a 2027 full of safe, happy childhoods across the NRV. Happy New Year! 🎆'],
+['2027-01-05','aware','ig fb li','Carousel',8,'New year, stronger community: 3 ways to help','3 ways to make a difference this year:\n1) volunteer as a CASA\n2) take a free parenting class\n3) book a prevention training\nSwipe to choose yours →'],
+['2027-01-06','event','li','Image',12,'Last call: Spring intern applications','Last call! 🎓 Applications for our Spring 2027 Social Media & Marketing Internship close [date].\n\nIf you\'re a student in marketing, communication, PR or digital media and want work that makes a difference in the NRV, apply on Handshake: [link]',1],
+['2027-01-07','casa','ig fb','Image',10,'January is National Mentoring Month','One consistent adult can change a child\'s story. This National Mentoring Month, consider becoming a CASA volunteer. 💙'],
+['2027-01-12','parent','ig fb','Carousel',9,'FREE 8-week parenting class starts [date]','Our Parenting Young Children class (ages 0–6) starts [date]. In person or on Zoom, and all materials are free. Register: 540.494.0835.'],
+['2027-01-13','prev','li','Image',15,'Book a Stewards of Children® training','Do your employees, coaches or volunteers work with kids? NRV CARES offers Stewards of Children® training to help adults prevent child sexual abuse. Message us to schedule a session for your team this spring.'],
+['2027-01-14','prev','ig fb','Carousel',16,'Know the signs. Know where to turn.','Knowledge is power. Swipe for signs that a child may need help and where to turn in the New River Valley.'],
+['2027-01-19','casa','ig fb','Reel',35,'Meet a CASA volunteer','"I wanted at-risk children to have a dedicated advocate for as long as they needed one." Meet one of our volunteers (shared with permission).'],
+['2027-01-20','event','li','Carousel',14,'Welcome, Spring 2027 interns!','Please welcome our Spring 2027 interns! 👋\n\n[Name], [major] at Virginia Tech, joins us as Social Media & Marketing Intern and will help NRV families find our programs online.\n\nThank you to Virginia Tech Career & Professional Development for helping us connect with great students.',1],
+['2027-01-21','event','ig fb li','Image',20,'Save the date: Annual Event & Auction, March 20','Save the date! 🎉 Our 27th Annual Event & Auction is Saturday, March 20. We sold out the last two years, so mark your calendar now.'],
+['2027-01-26','donor','li fb','Carousel',21,'Become a 2027 event sponsor','Put your business in front of 200 supporters and help NRV children. Sponsorships range from Community Sponsor to Community Champion. Swipe for the levels and message us to join.'],
+['2027-01-28','parent','ig fb','Image',36,'Parenting tip: name feelings together','Tip of the week: when your child is upset, name the feeling together ("You\'re frustrated"). It helps kids calm down and feel understood.'],
+['2027-02-02','event','ig fb li','Reel',28,'Tickets are on sale!','Tickets for our 27th Annual Event & Auction are on sale! 🎟️ Two drinks, heavy appetizers, a live auction and dancing on March 20. We sold out last year, so don\'t wait. Link in bio.'],
+['2027-02-03','event','li','Image',13,'Intern spotlight: building our social media system','Intern spotlight ✨\n\nThis semester our marketing intern is building NRV CARES\' content calendar and a social media analytics tracker that future interns will keep using. Real nonprofit marketing, real results.\n\nInterested in interning with us? Summer applications open in March.',1],
+['2027-02-04','casa','ig fb','Carousel',22,'Spring CASA training: applications open','Our spring CASA volunteer training is coming up. Swipe for what to expect, then apply through the link in bio.'],
+['2027-02-09','parent','ig fb','Image',18,'Going through a separation? We can help.','Our court-approved Parenting Through Separation & Divorce seminar gives you tools to support your child through the change. Offered on Zoom every other month.'],
+['2027-02-10','event','ig fb','Carousel',19,'Auction sneak peek: art, golf & experiences','Sneak peek! 👀 Last year\'s auction had 103 items, from local art to golf rounds. Here are a few of this year\'s favorites so far →'],
+['2027-02-11','aware','ig fb','Image',17,'Love looks like listening','This Valentine\'s Day, show love by listening. Put the phone down for 10 minutes and let your kids lead the conversation. 💕'],
+['2027-02-16','prev','li','Image',15,'Prevention training for schools & churches','Schools, churches and youth programs: our trained staff can bring Stewards of Children® to your team. Message us to book a date this spring.'],
+['2027-02-18','donor','ig fb li','Image',21,'Sponsor spotlight: [Sponsor name]','Sponsor spotlight! 🌟 Thank you to [Sponsor] for supporting our 27th Annual Event & Auction and children across the NRV. @[sponsor]'],
+['2027-02-23','casa','ig fb','Carousel',23,'No law degree needed: CASA FAQ','Do I need legal experience? How much time does it take? Swipe for answers to the most common CASA questions.'],
+['2027-02-25','donor','ig fb li','Image',29,'Sponsor spotlight: [Sponsor name]','Another huge thank-you to [Sponsor] for sponsoring our Annual Event & Auction. Local businesses keep NRV kids safe. @[sponsor]'],
+['2027-03-02','parent','ig fb','Image',16,'Circle of Parents: you\'re not alone','Parenting is easier with a support system. Circle of Parents® is free and meets every week. Call 540.494.0835 to join.'],
+['2027-03-03','event','ig fb','Reel',19,'Auction sneak peek #2','More auction items! The virtual silent auction opens March 17, and anyone can bid. Here\'s a look at what\'s up for grabs →'],
+['2027-03-04','donor','ig fb li','Image',20,'Sponsor spotlight: [Sponsor name]','Thank you, [Sponsor]! Your support of our Annual Event & Auction helps fund free programs for NRV families. @[sponsor]'],
+['2027-03-09','event','ig fb li','Carousel',37,'Where your ticket goes','Every ticket supports free parenting classes and CASA advocacy for 100+ NRV children. Swipe to see the impact, then join us March 20!'],
+['2027-03-10','event','li','Image',12,'Summer 2027 internships are open','Summer 2027 internships are open at NRV CARES! 🌱\n\nWe\'re hiring students for:\n• Social Media & Marketing\n• Grants & Fundraising\n• Research & Development\n\nGain hands-on nonprofit experience while protecting children and strengthening families in the New River Valley. Apply on Handshake: [link]',1],
+['2027-03-11','prev','ig fb','Carousel',24,'Safe adults checklist','What makes a "safe adult"? Swipe for a quick checklist parents and caregivers can use.'],
+['2027-03-16','event','ig fb','Image',26,'4 days to go: last tickets!','Only 4 days until our Annual Event & Auction! 🌷 A few tickets are left. Grab yours at the link in bio.'],
+['2027-03-17','event','ig fb li','Image',20,'Bid from anywhere: virtual auction is live','Our virtual silent auction is LIVE! Anyone can bid until 11 PM on March 20. Set a max bid and the system bids for you. Link in bio.'],
+['2027-03-20','event','ig fb','Stories',28,'Event day! Bids close at 11 PM','It\'s event day! 🎉 Follow our Stories for behind-the-scenes moments, and get your last bids in before 11 PM.'],
+['2027-03-23','event','ig fb li','Carousel',29,'Thank you! We raised $[amount]','THANK YOU! Together we raised $[amount] for children and families in the New River Valley. Swipe for photos from the night (credit: [photographer]).'],
+['2027-03-25','aware','ig fb','Carousel',30,'Order your pinwheels for April','April is Child Abuse Prevention Month! Order a pinwheel garden for your home, school or business and show every child deserves a happy childhood. 💙'],
+['2027-03-30','donor','ig fb li','Carousel',27,'Thank you to our 2027 sponsors','Thank you to every sponsor who made our 27th Annual Event & Auction possible. Swipe to see them all →'],
+['2027-04-01','aware','ig fb li','Image',31,'April is Child Abuse Prevention Month','Today starts Child Abuse Prevention Month. All April we\'re sharing ways every adult can help build a resilient NRV free of child abuse. 💙'],
+['2027-04-06','prev','ig fb','Reel',30,'Pinwheels for Prevention: plant a garden','Watch our team plant a pinwheel garden! Plant your own this month and share a photo with #PinwheelsForPrevention.'],
+['2027-04-07','event','ig fb li','Carousel',34,'Spring Family Fun Festivals in every county','FREE family fun is coming to every NRV locality! Swipe for festival dates in Radford, Floyd, Montgomery, Pulaski and Giles.'],
+['2027-04-08','casa','ig fb','Image',38,'CASA volunteers speak up for 100+ NRV kids','Every year our CASA volunteers advocate for more than 100 children in local courts. Join them. The next training starts [date].'],
+['2027-04-13','prev','li','Image',14,'Workplaces: host a training this month','Make Child Abuse Prevention Month count at work. Host a Stewards of Children® training for your team. Message NRV CARES to schedule.'],
+['2027-04-14','event','ig fb','Reel',33,'Festival recap: Radford','Bubbles, cotton candy and a big crowd! Thank you, Radford, for a great Spring Family Fun Festival. 🫧'],
+['2027-04-15','parent','ig fb','Carousel',32,'5 ways to build a strong family','Strong families protect kids. Swipe for 5 everyday ways to build connection at home.'],
+['2027-04-20','casa','ig fb li','Image',35,'National Volunteer Week: thank you, CASAs','It\'s National Volunteer Week! Thank you to every CASA volunteer who speaks up for NRV children. You make a lasting difference.'],
+['2027-04-21','event','li','Carousel',15,'3 things our interns learned this semester','As the spring semester wraps up, our interns shared what they learned:\n1) Data beats guessing: the tracker showed which posts worked\n2) Consistency grows an audience\n3) Nonprofit work is teamwork\n\nThank you, [names]! Summer applications close [date].',1],
+['2027-04-22','prev','ig fb','Carousel',16,'Know the signs this April','Child abuse is preventable. Swipe for signs to watch for and how to get help in the New River Valley.'],
+['2027-04-27','donor','ig fb','Carousel',31,'Pinwheel gardens across the NRV: thank you!','Thank you to every school, business and family who planted a pinwheel garden this month! Swipe to see them →'],
+['2027-04-28','event','li','Image',13,'Final week: summer intern applications','Final week to apply for a Summer 2027 internship at NRV CARES! Marketing, grants & fundraising, and research roles are open. Apply on Handshake by [date].',1],
+['2027-04-29','event','ig fb','Image',34,'Coming up: Giles County Spring Festival','Next up: our Giles County Spring Family Fun Festival in May. Bring the whole family for free games, treats and resources!']
+];
+const POSTS=RAW.map(([d,c,p,f,ph,h,cap,intern],i)=>({id:i,date:d,cat:c,plats:p.split(' '),fmt:f,ph,head:h,cap,intern:!!intern}));
+const MONTHS={
+ '2026-12':{short:'Dec',name:'December',year:'2026',kick:'Holiday season',theme:'Giving & gratitude',text:'Giving Tuesday opens the month, followed by a year-end impact recap, holiday family tips and a New Year push for CASA volunteers. LinkedIn starts recruiting spring interns.',keys:[['Dec 1','Giving Tuesday'],['Dec 2','Spring intern posting on LinkedIn'],['Dec 15','Year-end impact recap'],['Dec 24–25','Holidays: light posting']]},
+ '2027-01':{short:'Jan',name:'January',year:'2027',kick:'New Year',theme:'New year, new volunteers',text:'National Mentoring Month CASA recruitment, the free parenting class launch, welcoming spring interns, and the auction save-the-date.',keys:[['Jan','National Mentoring Month'],['Jan 20','Welcome spring interns'],['Jan 21','Auction save-the-date'],['Jan 26','Sponsor call on LinkedIn']]},
+ '2027-02':{short:'Feb',name:'February',year:'2027',kick:"Valentine's",theme:'Build up to the auction',text:'Tickets go on sale, sponsors get weekly spotlights, auction sneak peeks start, and spring CASA training opens. Valentine\'s Day gets a family-connection tip.',keys:[['Feb 2','Auction tickets on sale'],['Feb 3','Intern spotlight'],['Feb 14',"Valentine's Day"],['Feb 18 →','Weekly sponsor spotlights']]},
+ '2027-03':{short:'Mar',name:'March',year:'2027',kick:'Spring & Easter',theme:'Annual Event & Auction',text:'"Where your ticket goes," the virtual auction, event-day Stories and the thank-you recap. LinkedIn opens summer internships, and pinwheel orders start.',keys:[['Mar 10','Summer internships open'],['Mar 17','Virtual auction opens'],['Mar 20','27th Annual Event & Auction'],['Mar 28','Easter Sunday']]},
+ '2027-04':{short:'Apr',name:'April',year:'2027',kick:'Child Abuse Prevention Month',theme:'Pinwheels & prevention',text:'Pinwheels for Prevention, Spring Family Fun Festivals, prevention tips, National Volunteer Week and summer intern recruiting.',keys:[['Apr','Child Abuse Prevention Month'],['Apr 18–24','National Volunteer Week'],['Apr 21','Intern semester recap'],['Apr–May','Spring Family Fun Festivals']]}
+};
+const EVENTS={'2026-12-01':'Giving Tuesday','2026-12-25':'Christmas','2027-01-01':"New Year's Day",'2027-01-18':'MLK Day','2027-02-14':"Valentine's",'2027-03-20':'Event & Auction','2027-03-28':'Easter','2027-04-01':'CAP Month','2027-04-18':'Volunteer Week'};
+
+/* ---------- helpers ---------- */
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const D=(d,o)=>new Date(d+'T12:00:00').toLocaleDateString('en-US',o);
+const ICO={ig:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#fff"/></svg>',
+ fb:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M14 8h3V4h-3c-2.8 0-4.5 1.8-4.5 4.6V11H7v4h2.5v8h4v-8h3l.5-4h-3.5V9c0-.6.4-1 1-1z"/></svg>',
+ li:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M4 9h3.5v11H4zM5.7 3.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM9.5 9H13v1.6c.5-.9 1.7-1.9 3.6-1.9 3.6 0 4.2 2.3 4.2 5.3V20h-3.5v-5.3c0-1.3 0-2.9-1.8-2.9s-2.1 1.4-2.1 2.8V20H9.5z"/></svg>'};
+const PN={ig:'Instagram',fb:'Facebook',li:'LinkedIn'};
+const pico=p=>`<span class="pico p-${p}" title="${PN[p]}">${ICO[p]}</span>`;
+const time=p=>p.fmt==='Stories'?'Throughout the evening':p.plats.length===1&&p.plats[0]==='li'?'10:00 AM':`11:00 AM${p.plats.includes('li')?' (LinkedIn 10:00 AM)':''}`;
+const graphic=(p,wide)=>`<div class="graphic${wide?' wide':''}" style="--cc:${CATS[p.cat].color}"><img src="${img(p.ph,wide?900:700,wide?470:700)}" alt="" loading="lazy"><div class="ov"></div><div class="wm">NRV CARES</div><div class="hl">${esc(p.head)}</div><div class="tg">${p.intern?'Careers · Internships':CATS[p.cat].name}</div></div>`;
+
+/* ---------- state ---------- */
+let on=Object.fromEntries(Object.keys(CATS).map(k=>[k,true])), plat='all', view='2026-12';
+try{const s=JSON.parse(localStorage.getItem('nrvcal2'));if(s){on={...on,...s.on};plat=s.plat||'all'}}catch(e){}
+const hashView=()=>{const h=location.hash.slice(1);const k=Object.keys(MONTHS).find(k=>MONTHS[k].short.toLowerCase()===h);if(k)view=k;else if(h==='gallery')view='gallery'};hashView();
+const keep=()=>{try{localStorage.setItem('nrvcal2',JSON.stringify({on,plat}))}catch(e){}};
+const vis=()=>POSTS.filter(p=>on[p.cat]&&(plat==='all'||p.plats.includes(plat)));
+
+function controls(){
+  cats.innerHTML='<span class="lbl">Categories</span>'+Object.entries(CATS).map(([k,c])=>`<button class="chip" aria-pressed="${on[k]}" data-cat="${k}"><i style="background:${c.color}"></i>${c.name}</button>`).join('');
+  plats.innerHTML='<span class="lbl">Platform</span>'+[['all','All platforms'],['ig','Instagram'],['fb','Facebook'],['li','LinkedIn']].map(([k,l])=>`<button class="chip" aria-pressed="${plat===k}" data-plat="${k}">${k!=='all'?pico(k):''}${l}</button>`).join('');
+  tabs.innerHTML=Object.entries(MONTHS).map(([k,m])=>`<button class="tab" role="tab" aria-selected="${view===k}" data-m="${k}">${m.name}<span>${m.year}</span></button>`).join('')+`<button class="tab" role="tab" aria-selected="${view==='gallery'}" data-m="gallery">All posts<span>gallery</span></button>`;
+}
+const tile=p=>`<button class="post" data-id="${p.id}" aria-label="${esc(p.head)}"><img src="${img(p.ph,260,140)}" alt="" loading="lazy"><span class="stripe" style="background:${CATS[p.cat].color}"></span><span class="plats">${p.plats.map(pico).join('')}</span>${p.fmt!=='Image'?`<span class="fmt">${p.fmt==='Reel'?'▶ Reel':p.fmt}</span>`:''}<span class="cap">${esc(p.head)}</span></button>`;
+function month(k){
+  const [y,mo]=k.split('-').map(Number),days=new Date(y,mo,0).getDate(),lead=new Date(y,mo-1,1).getDay();const ps=vis().filter(p=>p.date.startsWith(k));
+  let h=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="dow">${d}</div>`).join('')+'<div class="day out"></div>'.repeat(lead),ag='';
+  for(let d=1;d<=days;d++){const ds=`${k}-${String(d).padStart(2,'0')}`,dp=ps.filter(p=>p.date===ds),ev=EVENTS[ds];
+    h+=`<div class="day"><div class="n"><span>${d}</span>${ev?`<em>${ev}</em>`:''}</div>${dp.map(tile).join('')}</div>`;
+    if(dp.length||ev)ag+=`<div class="ar"><time>${D(ds,{weekday:'short'})}<br>${d}</time><div class="ps">${ev?`<div style="grid-column:1/-1"><span class="day" style="min-height:0;background:none;padding:0"><span class="n"><em>${ev}</em></span></span></div>`:''}${dp.map(tile).join('')}</div></div>`}
+  h+='<div class="day out"></div>'.repeat((7-(lead+days)%7)%7);
+  return `<div class="cal">${h}</div><div class="agenda">${ag||'<p>No posts match these filters.</p>'}</div>`;
+}
+function gallery(){return `<div class="gallery">${vis().map(p=>`<button class="gcard" data-id="${p.id}">${graphic(p)}<div class="meta"><b>${D(p.date,{month:'short',day:'numeric'})}</b>${p.plats.map(pico).join('')}</div></button>`).join('')}</div>`}
+function hero(){
+  if(view==='gallery'){const n=vis().length;return `<div><span class="kick">December – April</span><h2>Every post</h2></div><div class="sub"><p>${n} posts across Instagram, Facebook and LinkedIn. Tap any post to preview it on each platform.</p></div>`}
+  const m=MONTHS[view],n=vis().filter(p=>p.date.startsWith(view)).length;
+  return `<div><span class="kick">${m.kick}</span><h2>${m.name} ${m.year}</h2></div><div class="sub"><p><b>${m.theme}.</b> ${m.text}</p><p style="margin-top:4px;opacity:.8">${n} posts this month</p></div>`;
+}
+function side(){
+  const ps=view==='gallery'?vis():vis().filter(p=>p.date.startsWith(view)),t=ps.length||1;
+  const cnt=Object.keys(CATS).map(k=>[k,ps.filter(p=>p.cat===k).length]);
+  const pc=k=>ps.filter(p=>p.plats.includes(k)).length;
+  const m=MONTHS[view];
+  return `<div class="panel card"><h3>Posts by platform</h3><div class="pl">${['ig','fb','li'].map(k=>`<div>${pico(k).replace('class="pico','style="margin:0 auto 4px;width:22px;height:22px" class="pico')}<b>${pc(k)}</b><span>${PN[k]}</span></div>`).join('')}</div></div>
+  <div class="panel card"><h3>Content mix</h3><div class="mix">${cnt.filter(c=>c[1]).map(([k,n])=>`<span style="width:${n/t*100}%;background:${CATS[k].color}"></span>`).join('')}</div><ul class="ml">${cnt.map(([k,n])=>`<li><i style="background:${CATS[k].color}"></i>${CATS[k].name}<b>${n}</b></li>`).join('')}</ul><p style="font-size:11.5px;color:var(--muted);margin:8px 0 0">Internship posts on LinkedIn: <b>${ps.filter(p=>p.intern).length}</b></p></div>
+  ${m?`<div class="panel card"><h3>Key dates</h3><ul class="keys">${m.keys.map(([d,x])=>`<li><time>${d}</time><span>${x}</span></li>`).join('')}</ul></div>`:''}
+  <div class="panel card"><h3>When to post</h3><div class="times"><div>${pico('ig')}<span><b>Instagram</b> Tue–Thu, 11 AM–4 PM</span></div><div>${pico('fb')}<span><b>Facebook</b> Tue–Thu, 10 AM–4 PM</span></div><div>${pico('li')}<span><b>LinkedIn</b> Tue–Thu, 10 AM–2 PM</span></div></div></div>`;
+}
+function render(){document.body.dataset.m=view;controls();heroEl.innerHTML=hero();viewEl.innerHTML=view==='gallery'?gallery():month(view);sideEl.innerHTML=side()}
+const cats=document.getElementById('cats'),plats=document.getElementById('plats'),tabs=document.getElementById('tabs'),heroEl=document.getElementById('hero'),viewEl=document.getElementById('view'),sideEl=document.getElementById('side');
+
+/* ---------- post dialog with platform previews ---------- */
+const dlg=document.getElementById('dlg');
+function preview(p,k){
+  const tags=p.intern?INTERN_TAGS:CATS[p.cat].tags, txt=esc(p.cap)+'\n\n'+tags;
+  if(k==='ig')return `<div class="mockup"><div class="mh"><div class="av">NRV</div><div><b>nrvcares</b><small>Christiansburg, Virginia</small></div></div>${graphic(p)}<div class="ig-actions">♡ 💬 ↗</div><div class="mt"><b>nrvcares</b> ${txt}</div></div>`;
+  if(k==='fb')return `<div class="mockup"><div class="mh"><div class="av">NRV</div><div><b>NRV CARES</b><small>${D(p.date,{month:'long',day:'numeric'})} · 🌐</small></div></div><div class="mt">${txt}</div>${graphic(p,true)}<div class="mf"><span>👍 Like</span><span>💬 Comment</span><span>↗ Share</span></div></div>`;
+  return `<div class="mockup"><div class="mh"><div class="av">NRV</div><div><b>NRV CARES</b><small>Non-profit Organizations · Christiansburg, VA</small></div></div><div class="mt li">${txt}</div>${graphic(p,true)}<div class="mf"><span>👍 Like</span><span>💬 Comment</span><span>🔁 Repost</span><span>➤ Send</span></div></div>`;
+}
+function open(p){const c=CATS[p.cat];let cur=p.plats[0];
+  const draw=()=>{document.getElementById('dg').innerHTML=`<div style="min-width:0"><span class="tag" style="color:${c.color}"><i style="background:${c.color}"></i>${p.intern?'Careers · Internships':c.name}</span><h3>${esc(p.head)}</h3>
+   <dl><dt>Date</dt><dd>${D(p.date,{weekday:'long',month:'long',day:'numeric',year:'numeric'})}</dd><dt>Time</dt><dd>${time(p)}</dd><dt>Platforms</dt><dd style="display:flex;gap:5px;align-items:center">${p.plats.map(k=>pico(k)+' '+PN[k]).join(' &nbsp;')}</dd><dt>Format</dt><dd>${p.fmt}</dd><dt>Category</dt><dd>${c.name}</dd><dt>Call to action</dt><dd>${p.intern?'Apply on Handshake':c.cta}</dd></dl>
+   <button class="copy" id="cp">Copy caption</button></div>
+   <div style="min-width:0"><div class="ptabs">${p.plats.map(k=>`<button class="ptab" aria-selected="${k===cur}" data-pv="${k}">${pico(k)}${PN[k]} preview</button>`).join('')}</div>${preview(p,cur)}</div>`;
+   document.querySelectorAll('[data-pv]').forEach(b=>b.onclick=()=>{cur=b.dataset.pv;draw()});
+   document.getElementById('cp').onclick=async e=>{const t=p.cap+'\n\n'+(p.intern?INTERN_TAGS:c.tags);try{await navigator.clipboard.writeText(t);e.target.textContent='Copied!'}catch(_){e.target.textContent='Copy failed: select the caption in the preview'}}};
+  draw();dlg.showModal()}
+document.getElementById('x').onclick=()=>dlg.close();
+dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close()});
+document.addEventListener('click',e=>{
+  const c=e.target.closest('[data-cat]');if(c){on[c.dataset.cat]=!on[c.dataset.cat];keep();render();return}
+  const pl=e.target.closest('[data-plat]');if(pl){plat=pl.dataset.plat;keep();render();return}
+  const t=e.target.closest('.tab[data-m]');if(t){view=t.dataset.m;history.replaceState(null,'','#'+(view==='gallery'?'gallery':MONTHS[view].short.toLowerCase()));render();scrollTo({top:0,behavior:'smooth'});return}
+  const p=e.target.closest('[data-id]');if(p&&!dlg.open)open(POSTS[+p.dataset.id]);
+});
+addEventListener('hashchange',()=>{hashView();render()});
+render();
+</script>
+</body>
+</html>
